@@ -16,7 +16,11 @@ Projection::Projection(Salle salle, Film film, std::tm date) :
   nbReservations(0), salle(salle), film(film), date(date) {}
 
 bool Projection::reserver(int nbPlaces) {
-    return true;
+    if (salle.nbPlaces - nbReservations >= nbPlaces) {
+        nbReservations += nbPlaces;
+        return true;
+    }
+    return false;
 }
 
 bool Projection::operator<(const Projection& autre) const {
@@ -97,10 +101,68 @@ ArbreAVL<std::string> Cinema::disponible(const std::tm& debut, const std::tm& fi
 }
 
 int Cinema::reserver(const std::string& film, const std::tm& debutmin, int nbplaces, std::tm& datesortie){
-    datesortie = std::tm{59, 59, 23, 8, 11, 123, 4, -1};
+    // Vérifier si le film existe
+    if (!films.contient(film)) {
+        return -1;
+    }
+
+    Film& filmObj = films[film];
+
+    // Créer une projection factice pour la recherche
+    Projection* projectionRecherche = new Projection(Salle(), Film(), debutmin);
+
+    // Rechercher la première projection >= debutmin dans les projections du film
+    ArbreAVL<Projection*>::Iterateur iterateur = filmObj.projections.rechercherEgalOuSuivant(projectionRecherche);
+
+    Projection* current = nullptr;
+    while (iterateur) {
+        current = filmObj.projections[iterateur];
+
+        // Vérifier s'il y a assez de places disponibles
+        int placesDisponibles = current->salle.nbPlaces - current->nbReservations;
+        if (placesDisponibles >= nbplaces) {
+            // Réserver les places
+            current->nbReservations += nbplaces;
+            datesortie = current->date;
+            int salleId = current->salle.id;
+            delete projectionRecherche;
+            return salleId;
+        }
+
+        ++iterateur;
+    }
+
+    delete projectionRecherche;
     return -1;
 }
 
 int Cinema::nbclients(const std::tm& debut, const std::tm& fin) const{
-    return 0;
+    int totalClients = 0;
+
+    // Créer une projection factice pour la recherche à partir de debut
+    Projection* projectionRecherche = new Projection(Salle(), Film(), debut);
+
+    // Rechercher la première projection >= debut
+    ArbreAVL<Projection*>::Iterateur iterateur = projections.rechercherEgalOuSuivant(projectionRecherche);
+
+    delete projectionRecherche;
+
+    Projection* current;
+    std::time_t finTime = std::mktime(const_cast<std::tm*>(&fin));
+
+    while (iterateur) {
+        current = projections[iterateur];
+
+        // Si la date de la projection est après fin, on arrête
+        std::time_t currentTime = std::mktime(const_cast<std::tm*>(&current->date));
+        if (currentTime > finTime)
+            break;
+
+        // Ajouter le nombre de réservations de cette projection
+        totalClients += current->nbReservations;
+
+        ++iterateur;
+    }
+
+    return totalClients;
 }
