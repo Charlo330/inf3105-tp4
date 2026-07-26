@@ -13,8 +13,7 @@
 #include "arbreavl.h"
 #include "arbremap.h"
 
-// Forward declaration for Projection pointer usage in Salle and Film
-class Projection;
+class Film;
 
 class Salle {
   public:
@@ -22,7 +21,17 @@ class Salle {
     int nbPlaces;
     Salle();
     Salle(int id, int nbPlaces);
-    ArbreAVL<Projection*> projections;
+};
+
+class Projection {
+  public:
+    Projection(Salle salle, Film* film, std::tm date);
+    int nbReservations;
+    Salle salle;
+    Film* film;
+    std::tm date;
+    bool reserver(int nbPlaces);
+    bool operator<(const Projection& autre) const;
 };
 
 class Film {
@@ -31,20 +40,8 @@ class Film {
     int duree;
     Film();
     Film(std::string nom, int duree);
-    ArbreAVL<Projection*> projections;
+    ArbreAVL<Projection> projections;
 };
-
-class Projection {
-  public:
-    Projection(Salle salle, Film film, std::tm date);
-    int nbReservations;
-    Salle salle;
-    Film film;
-    std::tm date;
-    bool reserver(int nbPlaces);
-    bool operator<(const Projection& autre) const;
-};
-
 
 class Cinema{
   public:
@@ -58,7 +55,7 @@ class Cinema{
   private:
     ArbreMap<int, Salle> salles;
     ArbreMap<std::string, Film> films;
-    ArbreAVL<Projection*> projections;
+    ArbreAVL<Projection> projections;
 };
 
 #endif // __CINEMA_H__
