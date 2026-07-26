@@ -48,7 +48,6 @@ bool Cinema::ajouterSalle(int id, int nbPlaces){
     Salle salle = Salle(id, nbPlaces);
 
     salles[id] = salle;
-    std::cout << "OK";
     return true;
 }
 
