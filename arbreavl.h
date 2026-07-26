@@ -349,7 +349,8 @@ int  ArbreAVL<T>::compter() const {
     return compter(racine);
 }
 
-int max(int i, int j) {
+template <class T>
+inline T max(T i, T j) {
   return i > j ? i : j;
 }
 

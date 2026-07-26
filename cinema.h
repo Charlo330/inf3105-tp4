@@ -23,11 +23,7 @@ class Salle {
     Salle();
     Salle(int id, int nbPlaces);
     ArbreAVL<Projection*> projections;
-
 };
-
-Salle::Salle() : id(0), nbPlaces(0) {}
-Salle::Salle(int id, int nbPlaces) : id(id), nbPlaces(nbPlaces), projections() {}
 
 class Film {
   public:
@@ -37,9 +33,6 @@ class Film {
     Film(std::string nom, int duree);
     ArbreAVL<Projection*> projections;
 };
-
-Film::Film() : nom(""), duree(0) {}
-Film::Film(std::string nom, int duree) : nom(nom), duree(duree), projections() {}
 
 class Projection {
   public:
@@ -52,29 +45,6 @@ class Projection {
     bool operator<(const Projection& autre) const;
 };
 
-Projection::Projection(Salle salle, Film film, std::tm date) : 
-  nbReservations(0), salle(salle), film(film), date(date) {}
-
-bool Projection::operator<(const Projection& autre) const {
-    // 1. Comparer les dates
-    if (date.tm_year != autre.date.tm_year)
-        return date.tm_year < autre.date.tm_year;
-
-    if (date.tm_mon != autre.date.tm_mon)
-        return date.tm_mon < autre.date.tm_mon;
-
-    if (date.tm_mday != autre.date.tm_mday)
-        return date.tm_mday < autre.date.tm_mday;
-
-    if (date.tm_hour != autre.date.tm_hour)
-        return date.tm_hour < autre.date.tm_hour;
-
-    if (date.tm_min != autre.date.tm_min)
-        return date.tm_min < autre.date.tm_min;
-
-    return film.nom < autre.film.nom;
-}
-
 
 class Cinema{
   public:
@@ -84,7 +54,7 @@ class Cinema{
     ArbreAVL<std::string> disponible(const std::tm& debut, const std::tm& fin, int nbplaces) const;
     int reserver(const std::string& film, const std::tm& debut, int nbPlaces, std::tm& datesortie);
     int nbclients(const std::tm& debut, const std::tm& fin) const;
-  
+
   private:
     ArbreMap<int, Salle> salles;
     ArbreMap<std::string, Film> films;
