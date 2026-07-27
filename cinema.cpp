@@ -23,6 +23,14 @@ bool Projection::reserver(int nbPlaces) {
     return false;
 }
 
+static bool tmApres(const std::tm& a, const std::tm& b) {
+    if (a.tm_year != b.tm_year) return a.tm_year > b.tm_year;
+    if (a.tm_mon  != b.tm_mon)  return a.tm_mon  > b.tm_mon;
+    if (a.tm_mday != b.tm_mday) return a.tm_mday > b.tm_mday;
+    if (a.tm_hour != b.tm_hour) return a.tm_hour > b.tm_hour;
+    return a.tm_min > b.tm_min;
+}
+
 bool Projection::operator<(const Projection& autre) const {
     if (date.tm_year != autre.date.tm_year)
         return date.tm_year < autre.date.tm_year;
@@ -77,11 +85,11 @@ ArbreAVL<std::string> Cinema::disponible(const std::tm& debut, const std::tm& fi
 
     while (iterateur) {
         const Projection& current = projections[iterateur];
-        std::time_t currentTime = std::mktime(const_cast<std::tm*>(&current.date));
 
-        if (currentTime > finTime)
+        if (tmApres(current.date, fin))
             break;
 
+        std::time_t currentTime = std::mktime(const_cast<std::tm*>(&current.date));
         std::time_t finProjTime = currentTime + current.film->duree;
         if (finProjTime <= finTime) {
             int placesLibres = current.salle.nbPlaces - current.nbReservations;
@@ -137,8 +145,6 @@ int Cinema::reserver(const std::string& film, const std::tm& debutmin, int nbpla
 }
 
 int Cinema::nbclients(const std::tm& debut, const std::tm& fin) const{
-    std::time_t finTime = std::mktime(const_cast<std::tm*>(&fin));
-
     Film dummyFilm("", 0);
     Projection dummy(Salle(), &dummyFilm, debut);
     ArbreAVL<Projection>::Iterateur iterateur = projections.rechercherEgalOuSuivant(dummy);
@@ -147,9 +153,8 @@ int Cinema::nbclients(const std::tm& debut, const std::tm& fin) const{
 
     while (iterateur) {
         const Projection& current = projections[iterateur];
-        std::time_t currentTime = std::mktime(const_cast<std::tm*>(&current.date));
 
-        if (currentTime > finTime)
+        if (tmApres(current.date, fin))
             break;
 
         totalClients += current.nbReservations;
