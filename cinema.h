@@ -21,6 +21,7 @@ class Salle {
     int nbPlaces;
     Salle();
     Salle(int id, int nbPlaces);
+    bool operator==(const Salle& autre) const;
 };
 
 class Projection {
@@ -32,6 +33,7 @@ class Projection {
     std::tm date;
     bool reserver(int nbPlaces);
     bool operator<(const Projection& autre) const;
+    bool operator==(const Projection& autre) const;
 };
 
 class Film {

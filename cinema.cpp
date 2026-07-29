@@ -8,6 +8,9 @@
 
 Salle::Salle() : id(0), nbPlaces(0) {}
 Salle::Salle(int id, int nbPlaces) : id(id), nbPlaces(nbPlaces) {}
+bool Salle::operator==(const Salle& autre) const {
+    return id == autre.id && nbPlaces == autre.nbPlaces;
+}
 
 Film::Film() : nom(""), duree(0) {}
 Film::Film(std::string nom, int duree) : nom(nom), duree(duree) {}
@@ -31,6 +34,15 @@ static bool tmApres(const std::tm& a, const std::tm& b) {
     return a.tm_min > b.tm_min;
 }
 
+static bool projectionConflit(const Projection& a, const Projection& b) {
+    if (a.salle.id != b.salle.id) return false;
+    std::time_t aDebT = std::mktime(const_cast<std::tm*>(&a.date));
+    std::time_t bDebT = std::mktime(const_cast<std::tm*>(&b.date));
+    std::time_t aFinT = aDebT + a.film->duree;
+    std::time_t bFinT = bDebT + b.film->duree;
+    return (aDebT < bFinT) && (bDebT < aFinT);
+}
+
 bool Projection::operator<(const Projection& autre) const {
     if (date.tm_year != autre.date.tm_year)
         return date.tm_year < autre.date.tm_year;
@@ -45,12 +57,15 @@ bool Projection::operator<(const Projection& autre) const {
     if (film == nullptr && autre.film == nullptr) return false;
     if (film == nullptr) return true;
     if (autre.film == nullptr) return false;
-    return film->nom < autre.film->nom;
+    if (film->nom != autre.film->nom) return film->nom < autre.film->nom;
+    return salle.id < autre.salle.id;
 }
 
 
 bool Cinema::ajouterSalle(int id, int nbPlaces){
     Salle salle = Salle(id, nbPlaces);
+    if (salles[id] == salle) return false;
+
     salles[id] = salle;
     return true;
 }
@@ -65,10 +80,17 @@ bool Cinema::projeter(const std::string& nom, int salle, const std::tm& debut){
     Salle& salleObj = salles[salle];
     Film& filmObj = films[nom];
 
-    Projection projection(salleObj, &filmObj, debut);
+    Projection nouveauProjection(salleObj, &filmObj, debut);
 
-    projections.inserer(projection);
-    filmObj.projections.inserer(projection);
+    // Vérifier les conflits avec les projections existantes
+    for (auto it = projections.debut(); it; ++it) {
+        if (projectionConflit(projections[it], nouveauProjection)) {
+            return false;
+        }
+    }
+
+    projections.inserer(nouveauProjection);
+    filmObj.projections.inserer(nouveauProjection);
 
     return true;
 }
